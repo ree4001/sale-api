@@ -1,0 +1,21 @@
+ittp-sale-mysql:
+  image: mysql
+  environment:
+    - MYSQL_ROOT_PASSWORD=1234
+    - MYSQL_DATABASE=saleApp
+  ports:
+    - "3310:3306"
+  command: mysqld --character-set-server=tis620 --collation-server=tis620_thai_ci --max-allowed-packet=1073741824
+  container_name: ittp-sale-mysql
+
+ittp-sale-phpmyadmin:
+  image: phpmyadmin/phpmyadmin
+  environment:
+    - MYSQL_USER=root
+    - MYSQL_PASSWORD=1234
+    - MYSQL_ROOT_PASSWORD=1234
+  links:
+    - ittp-sale-mysql:db
+  ports:
+    - "8084:80"
+  container_name: ittp-sale-phpmyadmin
