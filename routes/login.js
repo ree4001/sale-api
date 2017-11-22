@@ -73,6 +73,7 @@ router.post("/login", async function (req, res) {
   const output = {
     status: undefined,
     message: undefined,
+    id: undefined,
     rank: undefined,
     username: undefined,
     token: undefined
@@ -98,6 +99,7 @@ router.post("/login", async function (req, res) {
       output.status = 200
       output.message = 'success'
       output.username = user.sale_id
+      output.id = user.id
       const payload = { id: user.id }
       const token = jwt.sign(payload, jwtOptions.secretOrKey)
       output.token = token

@@ -5,9 +5,9 @@ import { API_SERVER } from '../config'
 
 const router = express.Router()
 
-router.get("/commission/getBySale/:month/:year", async function (req, res) {
+router.get("/commission/getBySale/:month/:year/:sale_id", async function (req, res) {
   const oldToken = await getAccessToken()
-  const path = `${API_SERVER}/api/Commissions/getBySale?month=${req.params.month}&year=${req.params.year}`
+  const path = `${API_SERVER}/api/Commissions/getBySale?month=${req.params.month}&year=${req.params.year}&sale_id=${req.params.sale_id}`
   request(`${path}&access_token=${oldToken}`, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
@@ -18,9 +18,9 @@ router.get("/commission/getBySale/:month/:year", async function (req, res) {
   })
 })
 
-router.get("/commission/summaryYear/:year", async function (req, res) {
-  const oldToken = await getAccessToken()
-  const path = `${API_SERVER}/api/Commissions/getBySaleYear?year=${req.params.year}`
+router.get("/commission/summaryYear/:year/:sale_id", async function (req, res) {
+  const oldToken = await getAccessToken() 
+  const path = `${API_SERVER}/api/Commissions/getBySaleYear?year=${req.params.year}&sale_id=${req.params.sale_id}`
   request(`${path}&access_token=${oldToken}`, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
@@ -31,9 +31,9 @@ router.get("/commission/summaryYear/:year", async function (req, res) {
   })
 })
 
-router.get("/commission/getByLeaderMonth/:month/:year", async function (req, res) {
+router.get("/commission/getByLeaderMonth/:month/:year/:leaderId", async function (req, res) {
   const oldToken = await getAccessToken()
-  const path = `${API_SERVER}/api/Commissions/getByLeaderMonth?month=${req.params.month}&year=${req.params.year}`
+  const path = `${API_SERVER}/api/Commissions/getByLeaderMonth?month=${req.params.month}&year=${req.params.year}&leaderId=${req.params.leaderId}`
   request(`${path}&access_token=${oldToken}`, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
@@ -57,9 +57,9 @@ router.get("/applications/sale/:filter", async function (req, res) {
   })
 })
 
-router.get("/applications/leader/:status/:filter", async function (req, res) {
+router.get("/applications/leader/:status/:filter/:leaderId", async function (req, res) {
   const oldToken = await getAccessToken()
-  const path = `${API_SERVER}/api/Applications/getByLeader?stastus=${req.params.status}&filter=${encodeURI(req.params.filter)}`
+  const path = `${API_SERVER}/api/Applications/getByLeader?stastus=${req.params.status}&filter=${encodeURI(req.params.filter)}&leaderId=${req.params.leaderId}`
   request(`${path}&access_token=${oldToken}`, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
@@ -70,9 +70,9 @@ router.get("/applications/leader/:status/:filter", async function (req, res) {
   })
 })
 
-router.get("/commission/getByLeaderYear/:year", async function (req, res) {
+router.get("/commission/getByLeaderYear/:year/:leaderId", async function (req, res) {
   const oldToken = await getAccessToken()
-  const path = `${API_SERVER}/api/Commissions/getByLeaderYear?year=${req.params.year}`
+  const path = `${API_SERVER}/api/Commissions/getByLeaderYear?year=${req.params.year}&leaderId=${req.params.leaderId}`
   request(`${path}&access_token=${oldToken}`, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
