@@ -83,6 +83,19 @@ router.get("/commission/getByLeaderYear/:year/:leaderId", async function (req, r
   })
 })
 
+router.get("/applications/customer/:filter", async function (req, res) {
+  const oldToken = await getAccessToken()
+  const path = `${API_SERVER}/api/Applications/fullApps?filter=${encodeURI(req.params.filter)}`
+  request(`${path}&access_token=${oldToken}`, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      const result = JSON.parse(response.body)
+      return res.send(result)
+    } else if (!error && response.statusCode == 500) {
+      return res.send(resetAccessToken(oldToken, path))
+    }
+  })
+})
+
 const getAccessToken = async () => {
   return new Promise(function (resolve, reject) {
     connection.query(
