@@ -12,7 +12,7 @@ router.get("/commission/getBySale/:month/:year/:sale_id", async function (req, r
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
       res.send(result)
-    } else if (!error && response.statusCode == 500) {
+    } else if (error && response.statusCode == 401) {
       res.send(resetAccessToken(oldToken, path))
     }
   })
@@ -25,7 +25,7 @@ router.get("/commission/summaryYear/:year/:sale_id", async function (req, res) {
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
       res.send(result)
-    } else if (!error && response.statusCode == 500) {
+    } else if (error && response.statusCode == 401) {
       res.send(resetAccessToken(oldToken, path))
     }
   })
@@ -38,7 +38,7 @@ router.get("/commission/getByLeaderMonth/:month/:year/:leaderId", async function
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
       res.send(result)
-    } else if (!error && response.statusCode == 500) {
+    } else if (error && response.statusCode == 401) {
       res.send(resetAccessToken(oldToken, path))
     }
   })
@@ -51,7 +51,7 @@ router.get("/applications/sale/:filter", async function (req, res) {
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
       return res.send(result)
-    } else if (!error && response.statusCode == 500) {
+    } else if (error && response.statusCode == 401) {
       return res.send(resetAccessToken(oldToken, path))
     }
   })
@@ -64,7 +64,7 @@ router.get("/applications/leader/:status/:filter/:leaderId", async function (req
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
       return res.send(result)
-    } else if (!error && response.statusCode == 500) {
+    } else if (error && response.statusCode == 401) {
       return res.send(resetAccessToken(oldToken, path))
     }
   })
@@ -77,21 +77,8 @@ router.get("/commission/getByLeaderYear/:year/:leaderId", async function (req, r
     if (!error && response.statusCode == 200) {
       const result = JSON.parse(response.body)
       res.send(result)
-    } else if (!error && response.statusCode == 500) {
+    } else if (error && response.statusCode == 401) {
       res.send(resetAccessToken(oldToken, path))
-    }
-  })
-})
-
-router.get("/applications/customer/:filter", async function (req, res) {
-  const oldToken = await getAccessToken()
-  const path = `${API_SERVER}/api/Applications/fullApps?filter=${encodeURI(req.params.filter)}`
-  request(`${path}&access_token=${oldToken}`, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      const result = JSON.parse(response.body)
-      return res.send(result)
-    } else if (!error && response.statusCode == 500) {
-      return res.send(resetAccessToken(oldToken, path))
     }
   })
 })

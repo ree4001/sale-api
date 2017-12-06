@@ -6,10 +6,8 @@ import request from 'request'
 import got from 'got'
 import moment from 'moment'
 import { API_SERVER } from '../config'
-
 import passport from 'passport'
 import passportJWT from 'passport-jwt'
-
 import connection from '../database'
 
 const ExtractJwt = passportJWT.ExtractJwt
@@ -25,6 +23,7 @@ const getSale = async (connection) => {
     )
   })
 }
+
 
 const jwtOptions = {}
 jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken()
@@ -70,13 +69,17 @@ router.use(bodyParser.urlencoded({
 router.use(bodyParser.json())
 
 
-router.post("/getotp", async function (req, res) {
-  const citizenId = req.body.citizenId
+router.post("/getOtp", async function (req, res) {
+  let citizenId = ''
+  let mobileNo = ''
+  if (req.body.citizenId !== undefined && req.body.mobileNo !== undefined) {
+    citizenId = req.body.citizenId
+    mobileNo = req.body.mobileNo
+  }
   const appliactions = await getApp(citizenId)
   const output = {
     status: undefined,
     message: undefined,
-    OTP:undefined,
   }
   const OTP = parseInt(Math.random() * 1000000)
   if (appliactions.length === 0) {
@@ -100,13 +103,18 @@ router.post("/getotp", async function (req, res) {
     const getTime = moment().format("YYYY-MM-DDTHH:mm:ss")
     if (UserByCitizenId.length === 0) {
       connection.query(
-        `INSERT INTO OTP (otp_token, citizen_id, create_time)
-         VALUES (${OTP.toString()}, '${citizenId}', '${getTime}')
+        `INSERT INTO OTP (otp_token, citizen_id, create_time, mobile_No)
+         VALUES (${OTP.toString()}, '${citizenId}', '${getTime}', '${mobileNo}')
         `,
-        function (err, rows, fields) {
+        async function (err, rows, fields) {
           if (err) {
             console.log(err)
           }
+          // test send
+          const sms = await got.get(`http://thaibulksms.com/sms_api_test.php?username=thaibulksms&password=thisispassword&message=OTP=${OTP.toString()}&msisdn=${mobileNo}`)
+          // true send
+          // const sms = await got.get(`http://www.thaibulksms.com/sms_api.php?username=0866651662&password=214061&message=${OTP.toString()}&msisdn=0955377875`, {})
+          console.log(sms.body)
           output.status = 200
           output.message = 'Get OPT Success'
           res.send(output)
@@ -117,13 +125,17 @@ router.post("/getotp", async function (req, res) {
         `UPDATE OTP
         SET otp_token=${OTP.toString()}, create_time='${getTime}' 
         WHERE citizen_id = '${citizenId}'`,
-        function (err, rows, fields) {
+        async function (err, rows, fields) {
           if (err) {
             console.log(err)
           }
+          // test send
+          const sms = await got.get(`http://thaibulksms.com/sms_api_test.php?username=thaibulksms&password=thisispassword&message='OTP=${OTP.toString()}'&msisdn=${mobileNo}`)
+          // true send
+          // const sms = await got.get(`http://www.thaibulksms.com/sms_api.php?username=0866651662&password=214061&message=OTP=${OTP.toString()}&msisdn=0955377875`, {})
+          console.log(sms.body)
           output.status = 200
           output.message = 'Get OPT Success'
-          output.OTP = OTP.toString()
           res.send(output)
         }
       )
@@ -131,9 +143,61 @@ router.post("/getotp", async function (req, res) {
   }
 })
 
+
+router.post("/sendOtp", async function (req, res) {
+  const citizenId = req.body.citizenId
+  console.log(citizenId)
+  const OTP = parseInt(Math.random() * 1000000)
+  const output = {
+    status: undefined,
+    message: undefined,
+    token: undefined,
+  }
+  const getOTP = async (connection) => {
+    return new Promise(function (resolve, reject) {
+      connection.query(
+        `SELECT * FROM OTP
+         WHERE citizen_id = '${citizenId}'
+        `,
+        function (err, rows, fields) {
+          resolve(rows)
+        }
+      )
+    })
+  }
+  const UserByCitizenId = await getOTP(connection)
+  const TimeLimitTosend = moment(UserByCitizenId[0].create_time).format("YYYY-MM-DDTHH:mm:ss")
+  const getTime = moment().format("YYYY-MM-DDTHH:mm:ss")
+  if (moment(getTime).isBefore(moment(TimeLimitTosend).add(2, 'minute'))) {
+    output.status = 400
+    output.message = 'badrequest'
+  } else {
+    connection.query(
+      `UPDATE OTP
+      SET otp_token=${OTP.toString()}, create_time='${getTime}' 
+      WHERE citizen_id = '${citizenId}'`,
+      async function (err, rows, fields) {
+        if (err) {
+          console.log(err)
+        }
+        const sms = await got.get(`http://thaibulksms.com/sms_api_test.php?username=thaibulksms&password=thisispassword&message=OTP=${OTP.toString()}&msisdn=${UserByCitizenId[0].mobile_No}`)
+        // const sms = await got.get(`http://www.thaibulksms.com/sms_api.php?username=0866651662&password=214061&message=OTP=${OTP.toString()}&msisdn=${UserByCitizenId[0].mobile_No}`, {})
+        console.log(sms.body)
+      })
+    output.status = 200
+    output.message = 'send message success'
+  }
+  res.send(output)
+})
+
 router.post("/loginByOtp", async function (req, res) {
   const OTP = req.body.otp
   const citizenId = req.body.citizenId
+  const output = {
+    status: undefined,
+    message: undefined,
+    token: undefined,
+  }
   const getOTP = async (connection) => {
     return new Promise(function (resolve, reject) {
       connection.query(
@@ -148,10 +212,26 @@ router.post("/loginByOtp", async function (req, res) {
     })
   }
   const UserByCitizenId = await getOTP(connection)
-  const LiftTimeOtp = moment(UserByCitizenId[0].create_time).format("YYYY-MM-DDTHH:mm:ss")
-  const getTime = moment().format("YYYY-MM-DDTHH:mm:ss")
-  console.log(moment(getTime).isBefore(moment(LiftTimeOtp).add(5, 'minute')))
-  res.send()
+  if (UserByCitizenId.length !== 0) {
+    const LiftTimeOtp = moment(UserByCitizenId[0].create_time).format("YYYY-MM-DDTHH:mm:ss")
+    const getTime = moment().format("YYYY-MM-DDTHH:mm:ss")
+    if (moment(getTime).isBefore(moment(LiftTimeOtp).add(5, 'minute'))) {
+      const payload = { id: UserByCitizenId[0].citizenId }
+      const token = jwt.sign(payload, jwtOptions.secretOrKey)
+      output.token = token
+      output.status = 200
+      output.message = 'Login Success'
+      res.send(output)
+    } else {
+      output.status = 400
+      output.message = 'OTP Is Time Out'
+      res.send(output)
+    }
+  } else {
+    output.status = 401
+    output.message = 'OTP or CitizenId not match'
+    res.send(output)
+  }
 })
 
 router.post("/login", async function (req, res) {

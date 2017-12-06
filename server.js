@@ -5,9 +5,9 @@ import cors from 'cors'
 import passport from 'passport'
 import passportJWT from 'passport-jwt'
 import connection from './database'
-import auth from './routes/auth'
 import login from './routes/login'
 import callLoopback from './routes/callLoopback'
+import customer from './routes/customer'
 
 const ExtractJwt = passportJWT.ExtractJwt
 const JwtStrategy = passportJWT.Strategy
@@ -45,6 +45,7 @@ const app = express()
 app.use(cors())
 app.use(bodyParser.json())
 app.use('/', login)
+app.use('/', customer)
 app.use('/', passport.authenticate('jwt', { session: false }), callLoopback)
 
 app.listen(PORT)
