@@ -59,7 +59,6 @@ const setAccessToken = async (accessToken, oldAccessToken) => {
 }
 
 const resetAccessToken = async (oldToken, path) => {
-  console.log('reset')
   request.post({ url: `${API_SERVER}/api/StaffUsers/login`, form: { username: 'Sale', password: '123' } }, async function (err, httpResponse, httpBody) {
     if (!err && httpResponse.statusCode == 200) {
       const token = JSON.parse(httpResponse.body)
@@ -74,6 +73,22 @@ const resetAccessToken = async (oldToken, path) => {
       }
     }
   })
+}
+
+export const getApplications = async (citizenId) => {
+  const oldToken = await getAccessToken()
+  const path = `${API_SERVER}/api/Applications/fullApps?filter={"where":{"citizenId":"${citizenId}"}}`
+  try {
+    const applicationsData = await got.get(`${path}&access_token=${oldToken}`, {})
+    if (applicationsData.statusCode === 200) {
+      const result = JSON.parse(applicationsData.body)
+      return result
+    }
+  } catch (err) {
+    if (err.statusCode === 401) {
+      return res.send(resetAccessToken(oldToken, path))
+    }
+  }
 }
 
 export default router
